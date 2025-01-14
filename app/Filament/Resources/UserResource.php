@@ -45,6 +45,9 @@ class UserResource extends Resource
                     ->password()
                     ->required()
                     ->maxLength(255),
+                Forms\Components\Toggle::make('is_admin')
+                    ->label('管理員')
+                    ->default(false),
             ]);
     }
 
@@ -56,6 +59,9 @@ class UserResource extends Resource
                     ->label('名稱'),
                 Tables\Columns\TextColumn::make('email')
                     ->label('電子郵件'),
+                Tables\Columns\IconColumn::make('is_admin')
+                    ->label('管理員')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('建立時間')
                     ->dateTime('d-m-Y H:i'),
