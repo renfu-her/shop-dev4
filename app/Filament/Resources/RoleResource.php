@@ -20,6 +20,10 @@ class RoleResource extends Resource
 
     protected static ?string $navigationLabel = '角色管理';
 
+    protected static ?string $modelLabel = '角色';
+
+    protected static ?string $pluralModelLabel = '角色';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -56,14 +60,29 @@ class RoleResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->label('編輯'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('刪除'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->label('刪除所選'),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('尚無角色')
+            ->emptyStateDescription('建立角色來管理使用者權限')
+            ->emptyStateActions([
+                Tables\Actions\CreateAction::make()
+                    ->label('新增角色'),
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->searchPlaceholder('搜尋角色')
+            ->filtersTriggerAction(
+                fn($action) => $action
+                    ->label('篩選')
+            );
     }
 
     public static function getPages(): array
