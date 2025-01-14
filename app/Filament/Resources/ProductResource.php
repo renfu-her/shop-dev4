@@ -9,6 +9,10 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Forms\Components\FileUpload;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Support\Str;
 
 class ProductResource extends Resource
 {
@@ -28,12 +32,32 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\FileUpload::make('image')
+                FileUpload::make('image')
                     ->label('主圖片')
                     ->image()
                     ->imageEditor()
                     ->directory('products')
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    ->imageResizeMode('cover')
+                    ->imageResizeTargetWidth('1024')
+                    ->imageResizeTargetHeight('1024')
+                    ->saveUploadedFileUsing(function ($file) {
+                        $manager = new ImageManager(new Driver());
+
+                        $image = $manager->read($file);
+
+                        // 調整圖片大小
+                        $image->cover(1024, 1024);
+
+                        // 生成唯一的檔案名
+                        $filename = Str::uuid() . '.webp';
+
+                        // 轉換並保存為 WebP
+                        $image->toWebp(80)->save(storage_path('app/public/products/' . $filename));
+
+                        return 'products/' . $filename;
+                    }),
                 Forms\Components\TextInput::make('name')
                     ->label('商品名稱')
                     ->required()
