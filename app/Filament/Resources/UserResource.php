@@ -48,6 +48,11 @@ class UserResource extends Resource
                 Forms\Components\Toggle::make('is_admin')
                     ->label('管理員')
                     ->default(false),
+                Forms\Components\Select::make('roles')
+                    ->label('角色')
+                    ->multiple()
+                    ->relationship('roles', 'name')
+                    ->preload(),
             ]);
     }
 
@@ -59,12 +64,12 @@ class UserResource extends Resource
                     ->label('名稱'),
                 Tables\Columns\TextColumn::make('email')
                     ->label('電子郵件'),
-                Tables\Columns\IconColumn::make('is_admin')
-                    ->label('管理員')
-                    ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('建立時間')
                     ->dateTime('d-m-Y H:i'),
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->label('角色')
+                    ->badge(),
             ])
             ->filters([
                 //
