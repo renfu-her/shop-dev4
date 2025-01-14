@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
+use App\Filament\Resources\ProductResource\RelationManagers\ImagesRelationManager;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -51,7 +52,7 @@ class ProductResource extends Resource
                         $image->cover(1024, 1024);
 
                         // 生成唯一的檔案名
-                        $filename = Str::uuid() . '.webp';
+                        $filename = Str::uuid()->toString() . '.webp';
 
                         // 轉換並保存為 WebP
                         $image->toWebp(80)->save(storage_path('app/public/products/' . $filename));
@@ -148,6 +149,13 @@ class ProductResource extends Resource
             'index' => Pages\ListProducts::route('/'),
             'create' => Pages\CreateProduct::route('/create'),
             'edit' => Pages\EditProduct::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            ImagesRelationManager::class,
         ];
     }
 }

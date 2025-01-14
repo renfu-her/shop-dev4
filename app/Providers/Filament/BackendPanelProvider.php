@@ -18,6 +18,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use App\Filament\Pages\Auth\Login;
 
 class BackendPanelProvider extends PanelProvider
 {
@@ -27,7 +28,8 @@ class BackendPanelProvider extends PanelProvider
             ->default()
             ->id('backend')
             ->path('backend')
-            ->login()
+            ->login(Login::class)
+            ->brandName('後台管理系統')
             ->colors([
                 'primary' => Color::Amber,
             ])
