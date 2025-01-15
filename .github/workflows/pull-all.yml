@@ -1,0 +1,26 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: create-directory
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: 22
+        script: |
+          cd /home/dev-vue-shop-demo5/htdocs/shop-demo5.dev-vue.com
+          git pull
+          composer install
+          php artisan migrate --force
+          php artisan config:cache
+          php artisan view:cache
+          php artisan route:cache
+          php artisan config:cache
+
