@@ -11,7 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\RichEditor;
+use Rawilk\FilamentQuill\Filament\Forms\Components\QuillEditor;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Str;
@@ -64,8 +64,9 @@ class ProductResource extends Resource
                     ->label('商品名稱')
                     ->required()
                     ->maxLength(255),
-                RichEditor::make('description')
+                QuillEditor::make('description')
                     ->label('商品描述')
+                    ->placeholder('請輸入商品描述...')
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('price')
                     ->label('價格')

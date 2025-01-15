@@ -1,3 +1,50 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 定義 Quill 編輯器的字體選項 */
+.ql-snow .ql-picker.ql-font .ql-picker-label::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item::before {
+    content: '微軟正黑體';
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value='microsoft-jhenghei']::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value='microsoft-jhenghei']::before {
+    content: '微軟正黑體';
+    font-family: 'Microsoft JhengHei';
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value='pmingliu']::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value='pmingliu']::before {
+    content: '新細明體';
+    font-family: 'PMingLiU';
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value='dfkai']::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value='dfkai']::before {
+    content: '標楷體';
+    font-family: 'DFKai-sb';
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value='noto-sans']::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value='noto-sans']::before {
+    content: '思源黑體';
+    font-family: 'Noto Sans TC';
+}
+
+/* 應用字體到編輯器內容 */
+.ql-font-microsoft-jhenghei {
+    font-family: 'Microsoft JhengHei', sans-serif !important;
+}
+
+.ql-font-pmingliu {
+    font-family: 'PMingLiU', serif !important;
+}
+
+.ql-font-dfkai {
+    font-family: 'DFKai-sb', serif !important;
+}
+
+.ql-font-noto-sans {
+    font-family: 'Noto Sans TC', sans-serif !important;
+}
