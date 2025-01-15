@@ -32,64 +32,34 @@ class CategoryResource extends Resource
             ->schema([
                 Forms\Components\Select::make('parent_id')
                     ->label('上層分類')
-                    ->relationship(
-                        name: 'parent',
-                        titleAttribute: 'name'
-                    )
-                    ->searchable()
-                    ->preload()
-                    ->placeholder('選擇上層分類')
-                    ->getSearchResultsUsing(function (string $search) {
-                        $categories = Category::query()
-                            ->where('name', 'like', "%{$search}%")
-                            ->get()
-                            ->map(function ($category) {
-                                // 手動計算深度
-                                $depth = 0;
-                                $parent_id = $category->parent_id;
+                    ->options(function () {
+                        // 獲取所有分類並組織成階層結構
+                        $categories = Category::all();
+                        $options = [];
 
-                                while ($parent_id) {
-                                    $depth++;
-                                    $parent = DB::table('categories')
-                                        ->where('id', $parent_id)
-                                        ->first();
-                                    if (!$parent) break;
-                                    $parent_id = $parent->parent_id;
-                                }
+                        // 先找出頂層分類
+                        $topCategories = $categories->whereNull('parent_id');
 
+                        // 遞迴函數來建立階層結構
+                        $buildOptions = function ($items, $depth = 0) use (&$buildOptions, $categories) {
+                            $options = [];
+                            foreach ($items as $category) {
                                 $prefix = str_repeat('　', $depth);
-                                return [
-                                    'id' => $category->id,
-                                    'name' => $prefix . $category->name,
-                                ];
-                            })
-                            ->pluck('name', 'id')
-                            ->toArray();
+                                $options[$category->id] = $prefix . $category->name;
 
-                        return $categories;
+                                // 找出此分類的子分類
+                                $children = $categories->where('parent_id', $category->id);
+                                if ($children->count() > 0) {
+                                    $options += $buildOptions($children, $depth + 1);
+                                }
+                            }
+                            return $options;
+                        };
+
+                        return $buildOptions($topCategories);
                     })
-                    ->getOptionLabelUsing(function ($value) {
-                        $category = Category::find($value);
-                        if (!$category) {
-                            return null;
-                        }
-
-                        // 手動計算深度
-                        $depth = 0;
-                        $parent_id = $category->parent_id;
-
-                        while ($parent_id) {
-                            $depth++;
-                            $parent = DB::table('categories')
-                                ->where('id', $parent_id)
-                                ->first();
-                            if (!$parent) break;
-                            $parent_id = $parent->parent_id;
-                        }
-
-                        $prefix = str_repeat('　', $depth);
-                        return $prefix . $category->name;
-                    }),
+                    ->searchable()
+                    ->placeholder('選擇上層分類'),
                 Forms\Components\TextInput::make('name')
                     ->label('分類名稱')
                     ->required()
@@ -111,7 +81,6 @@ class CategoryResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->label('分類名稱')
                     ->searchable()
-                    ->sortable()
                     ->getStateUsing(function (Category $record): string {
                         // 手動查詢父級分類來確定深度
                         $depth = 0;
@@ -130,14 +99,44 @@ class CategoryResource extends Resource
                         return $prefix . $record->name;
                     }),
                 Tables\Columns\TextColumn::make('sort')
-                    ->label('排序')
-                    ->sortable(),
+                    ->label('排序'),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('啟用狀態')
-                    ->boolean()
-                    ->sortable(),
+                    ->boolean(),
             ])
-            ->defaultSort('sort')
+            ->modifyQueryUsing(function (Builder $query) {
+                // 先獲取所有分類
+                $categories = Category::all();
+
+                // 遞迴函數來建立排序順序
+                $buildOrder = function ($parentId = null) use ($categories, &$buildOrder) {
+                    $ids = [];
+                    $items = $categories->where('parent_id', $parentId)->sortBy('sort');
+
+                    foreach ($items as $item) {
+                        $ids[] = $item->id;
+                        $ids = array_merge($ids, $buildOrder($item->id));
+                    }
+
+                    return $ids;
+                };
+
+                // 獲取排序後的 ID 列表
+                $orderedIds = $buildOrder();
+
+                if (!empty($orderedIds)) {
+                    // 建立 CASE 語句
+                    $cases = [];
+                    foreach ($orderedIds as $index => $id) {
+                        $cases[] = "WHEN id = {$id} THEN {$index}";
+                    }
+                    $orderByCase = "CASE " . implode(' ', $cases) . " END";
+
+                    return $query->orderByRaw($orderByCase);
+                }
+
+                return $query;
+            })
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('啟用狀態'),
@@ -153,7 +152,8 @@ class CategoryResource extends Resource
                     Tables\Actions\DeleteBulkAction::make()
                         ->label('刪除所選'),
                 ]),
-            ]);
+            ])
+            ->paginated(false);
     }
 
     public static function getPages(): array
