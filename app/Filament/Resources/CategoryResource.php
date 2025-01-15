@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class CategoryResource extends Resource
 {
@@ -31,9 +32,64 @@ class CategoryResource extends Resource
             ->schema([
                 Forms\Components\Select::make('parent_id')
                     ->label('上層分類')
-                    ->relationship('parent', 'name')
+                    ->relationship(
+                        name: 'parent',
+                        titleAttribute: 'name'
+                    )
                     ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->placeholder('選擇上層分類')
+                    ->getSearchResultsUsing(function (string $search) {
+                        $categories = Category::query()
+                            ->where('name', 'like', "%{$search}%")
+                            ->get()
+                            ->map(function ($category) {
+                                // 手動計算深度
+                                $depth = 0;
+                                $parent_id = $category->parent_id;
+
+                                while ($parent_id) {
+                                    $depth++;
+                                    $parent = DB::table('categories')
+                                        ->where('id', $parent_id)
+                                        ->first();
+                                    if (!$parent) break;
+                                    $parent_id = $parent->parent_id;
+                                }
+
+                                $prefix = str_repeat('　', $depth);
+                                return [
+                                    'id' => $category->id,
+                                    'name' => $prefix . $category->name,
+                                ];
+                            })
+                            ->pluck('name', 'id')
+                            ->toArray();
+
+                        return $categories;
+                    })
+                    ->getOptionLabelUsing(function ($value) {
+                        $category = Category::find($value);
+                        if (!$category) {
+                            return null;
+                        }
+
+                        // 手動計算深度
+                        $depth = 0;
+                        $parent_id = $category->parent_id;
+
+                        while ($parent_id) {
+                            $depth++;
+                            $parent = DB::table('categories')
+                                ->where('id', $parent_id)
+                                ->first();
+                            if (!$parent) break;
+                            $parent_id = $parent->parent_id;
+                        }
+
+                        $prefix = str_repeat('　', $depth);
+                        return $prefix . $category->name;
+                    }),
                 Forms\Components\TextInput::make('name')
                     ->label('分類名稱')
                     ->required()
@@ -52,13 +108,27 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('parent.name')
-                    ->label('上層分類')
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('name')
                     ->label('分類名稱')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(function (Category $record): string {
+                        // 手動查詢父級分類來確定深度
+                        $depth = 0;
+                        $parent_id = $record->parent_id;
+
+                        while ($parent_id) {
+                            $depth++;
+                            $parent = DB::table('categories')
+                                ->where('id', $parent_id)
+                                ->first();
+                            if (!$parent) break;
+                            $parent_id = $parent->parent_id;
+                        }
+
+                        $prefix = str_repeat('　', $depth);
+                        return $prefix . $record->name;
+                    }),
                 Tables\Columns\TextColumn::make('sort')
                     ->label('排序')
                     ->sortable(),
@@ -67,12 +137,8 @@ class CategoryResource extends Resource
                     ->boolean()
                     ->sortable(),
             ])
+            ->defaultSort('sort')
             ->filters([
-                Tables\Filters\SelectFilter::make('parent_id')
-                    ->label('上層分類')
-                    ->relationship('parent', 'name')
-                    ->searchable()
-                    ->preload(),
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('啟用狀態'),
             ])
