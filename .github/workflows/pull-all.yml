@@ -15,7 +15,7 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: 22
         script: |
-          cd /home/dev-vue-shop-demo5/htdocs/shop-demo5.dev-vue.com
+          cd /home/dev-vue-e-commerce-dev/htdocs/e-commerce-dev.dev-vue.com
           git pull
           composer install
           php artisan migrate --force
