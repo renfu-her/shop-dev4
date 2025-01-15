@@ -7,33 +7,33 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Product extends Model
+class Category extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'category_id',
         'name',
-        'description',
-        'image',
-        'price',
-        'stock',
+        'parent_id',
+        'sort',
         'is_active',
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
-        'stock' => 'integer',
         'is_active' => 'boolean',
     ];
 
-    public function category(): BelongsTo
+    public function parent(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    public function images(): HasMany
+    public function children(): HasMany
     {
-        return $this->hasMany(ProductImage::class)->orderBy('sort');
+        return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
     }
 }
