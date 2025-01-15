@@ -11,6 +11,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Illuminate\Support\Str;
@@ -39,7 +40,7 @@ class ProductResource extends Resource
                     ->imageEditor()
                     ->directory('products')
                     ->columnSpanFull()
-                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    ->acceptedFileTypes(['image/jpeg', 'image/png'])
                     ->imageResizeMode('cover')
                     ->imageResizeTargetWidth('1024')
                     ->imageResizeTargetHeight('1024')
@@ -63,9 +64,8 @@ class ProductResource extends Resource
                     ->label('商品名稱')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\Textarea::make('description')
+                RichEditor::make('description')
                     ->label('商品描述')
-                    ->maxLength(65535)
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('price')
                     ->label('價格')
